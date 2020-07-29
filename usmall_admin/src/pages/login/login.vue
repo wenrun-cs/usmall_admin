@@ -11,10 +11,12 @@
   </div>
 </template>
  <script>
+ import {mapGetters,mapActions} from 'vuex'
  import {requestManageLogin} from '../../util/request'
  import {successAlert,warningAlert} from '../../util/alert'
  export default {
-components: {},
+computed:{
+},
  data() {
  return {
      user:{
@@ -24,11 +26,15 @@ components: {},
  };
  },
  methods: {
+     ...mapActions({
+          requestUser:'requestUser'
+     }),
       login(){
           requestManageLogin(this.user).then(res=>{
               if(res.data.code==200){
-                  successAlert(res.data.msg)
-                  this.$router.push("/")
+                   successAlert(res.data.msg)
+                   this.requestUser(res.data.list)
+                   this.$router.push("/")
               }else{
                   warningAlert(res.data.msg)
               }

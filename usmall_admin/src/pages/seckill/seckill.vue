@@ -1,15 +1,40 @@
 <template>
   <div>
-      <h3>秒杀活动</h3>
+      <el-button type='primary' @click="add">添加</el-button>
+      <v-add :info='info' ref="add"></v-add>
+      <v-list @edit='edit'></v-list>
   </div>
 </template>
  <script>
+ import vAdd from './components/add'
+ import vList from './components/list'
  export default {
-components: {},
+components: {
+  vAdd,
+  vList
+},
  data() {
- return {};
+ return {
+   info:{
+     show:false,
+     isAdd:true,
+     title:'秒杀活动添加'
+   }
+ };
  },
- methods: {},
+ methods: {
+     add(){
+       this.info.show=true;
+       this.info.isAdd=true,
+       this.info.title='秒杀活动添加'
+     },
+     edit(id){
+       this.info.show=true;
+       this.info.isAdd=false,
+       this.info.title='秒杀活动修改'
+       this.$refs.add.getDetail(id);
+     }
+ },
  mounted(){},
  };
 </script>

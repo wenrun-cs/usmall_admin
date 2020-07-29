@@ -22,11 +22,16 @@ const mutations={
 }
 const actions={
     // 获取列表
-  requestSpecList(context){
-      const params={
-        page:context.state.page,
-        size:context.state.size 
-      }
+  requestSpecList(context,bool){
+     var params={};
+    if(!bool){
+     params={};
+    }else{
+        params={
+            page:context.state.page,
+            size:context.state.size 
+          }
+    }
     requestSpecList(params).then(res=>{
         if(res.data.list.length==0&&context.state.page>0){
             context.commit('changeSpecPage',context.state.page-1)
