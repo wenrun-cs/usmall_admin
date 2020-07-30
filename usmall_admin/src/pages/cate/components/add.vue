@@ -1,8 +1,8 @@
 <template>
   <div class="box">
     <el-dialog :title="info.title" :visible.sync="info.show">
-      <el-form :model="form">
-        <el-form-item label="上级分类" :label-width="formLabelWidth">
+      <el-form :model="form" :rules="rules" ref="form">
+        <el-form-item label="上级分类" :label-width="formLabelWidth" prop='pid'>
           <el-select v-model="form.pid" placeholder="请选择">
             <el-option label="--请选择--" disabled value></el-option>
             <el-option label="顶级分类" :value="0"></el-option>
@@ -10,7 +10,7 @@
             <el-option v-for="item in list" :key="item.id" :label="item.catename" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="分类名称" :label-width="formLabelWidth">
+        <el-form-item label="分类名称" :label-width="formLabelWidth" prop='catename'>
           <el-input v-model="form.catename" autocomplete="off"></el-input>
         </el-form-item>
         <!-- 上传文件 -->
@@ -37,8 +37,8 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-            <el-button type="primary" @click="add" v-if="info.isAdd">添加</el-button>
-            <el-button type="primary" @click="update" v-else>修改</el-button>
+            <el-button type="primary" @click="add(form)" v-if="info.isAdd">添加</el-button>
+            <el-button type="primary" @click="update(form)" v-else>修改</el-button>
       </div>
     </el-dialog>
   </div>
@@ -64,6 +64,15 @@ export default {
         img:null
       },
       imageUrl: "",
+      rules: {
+          catename: [
+            { required: true, message: '请输入分类名称', trigger: 'blur' },
+            { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          ],
+          pid: [
+            { required: true, message: '请选择上级分类', trigger: 'change' }
+          ]
+        }
     };
   },
   methods: {
@@ -86,8 +95,10 @@ export default {
         console.log(this.imageUrl) //http://localhost:8080/8c900147-78c6-4b1f-a4b3-92a4d3b79ac7
         this.form.img=file; 
       },
-      add(){
-          requestCateAdd(this.form).then(res=>{
+      add(formName){
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            requestCateAdd(this.form).then(res=>{
             if(res.data.code==200){
               successAlert(res.data.msg);
               this.cancel();
@@ -97,9 +108,17 @@ export default {
               warningAlert(res.data.msg)
             }
           })
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+          
       },
-      update(){
-          updateCateDetail(this.form).then(res=>{
+      update(formName){
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            updateCateDetail(this.form).then(res=>{
             if(res.data.code==200){
                successAlert('商品分类修改成功');
                this.cancel();
@@ -109,6 +128,11 @@ export default {
               warningAlert('商品分类修改失败');
             }
           })    
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
       },
       empty(){
         this.form={

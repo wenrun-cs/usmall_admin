@@ -1,14 +1,19 @@
 <template>
   <div class="box">
     <el-dialog :title="info.title" :visible.sync="info.show">
-      <el-form :model="form">
-        <el-form-item label="规格名称" label-width="80px">
+      <el-form :model="form" :rules="rules" ref="form">
+        <el-form-item label="规格名称" label-width="80px" prop="specsname">
           <el-input v-model="form.specsname" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item v-for="(item,index) in attrArr" :key="index" label="规格属性" label-width="80px">
-          <el-input v-model="item.value"   autocomplete="off"></el-input>
-          <el-button type='primary' v-if="index==0" @click="addAttr">新建规格属性</el-button>
-          <el-button type='danger' v-else @click="remove(index)">删除</el-button>
+        <el-form-item
+          v-for="(item,index) in attrArr"
+          :key="index"
+          label="规格属性"
+          label-width="80px"
+        >
+          <el-input v-model="item.value" autocomplete="off"></el-input>
+          <el-button type="primary" v-if="index==0" @click="addAttr">新建规格属性</el-button>
+          <el-button type="danger" v-else @click="remove(index)">删除</el-button>
         </el-form-item>
         <!-- 状态 -->
         <el-form-item label="状态" label-width="80px">
@@ -17,126 +22,170 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isAdd">添加</el-button>
-        <el-button type="primary"  @click="update" v-else>修改</el-button> 
+        <el-button type="primary" @click="add('form')" v-if="info.isAdd">添加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修改</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
  <script>
- import {requestSpecAdd,requestSpecDetail,updateSpecDetail} from '../../../util/request'
- import {mapGetters,mapActions} from 'vuex'
-import { warningAlert,successAlert } from '../../../util/alert';
+import {
+  requestSpecAdd,
+  requestSpecDetail,
+  updateSpecDetail,
+} from "../../../util/request";
+import { mapGetters, mapActions } from "vuex";
+import { warningAlert, successAlert } from "../../../util/alert";
 export default {
   props: ["info"],
-  computed:{
-      ...mapGetters({
-        list:'spec/list',
-        total:'spec/total'
-      })
+  computed: {
+    ...mapGetters({
+      list: "spec/list",
+      total: "spec/total",
+    }),
   },
   data() {
     return {
-        attrArr:[
-           {
-               value:'',
-           },
-        ],
-      form:{
+      attrArr: [
+        {
+          value: "",
+        },
+      ],
+      form: {
         specsname: "",
         attrs: "",
         status: 1,
+      },
+      rules: {
+        specsname: [
+          { required: true, message: "请输入规格名称", trigger: "blur" },
+          {
+            min: 1,
+            max: 15,
+            message: "长度在 1 到 15 个字符",
+            trigger: "blur",
+          },
+        ],
+        value: [
+          { required: true, message: "请输入规格属性", trigger: "blur" },
+          {
+            min: 1,
+            max: 15,
+            message: "长度在 1 到 15 个字符",
+            trigger: "blur",
+          },
+        ],
       },
     };
   },
   methods: {
     ...mapActions({
-        requestSpecList:'spec/requestSpecList',
-        requestSpecCount:'spec/requestSpecCount'
+      requestSpecList: "spec/requestSpecList",
+      requestSpecCount: "spec/requestSpecCount",
     }),
-    empty(){
-        this.form={
+    empty() {
+      this.form = {
         specsname: "",
         attrs: "",
         status: 1,
       };
-       this.attrArr=[{
-           value:''
-       }] 
+      this.attrArr = [
+        {
+          value: "",
+        },
+      ];
     },
-    cancel(){
-        this.info.show=false;
-        if(!this.info.inAdd){
-            this.empty();
-        }
+    cancel() {
+      this.info.show = false;
+      if (!this.info.inAdd) {
+        this.empty();
+      }
     },
-    remove(index){
-      this.attrArr.splice(index,1);  
+    remove(index) {
+      this.attrArr.splice(index, 1);
     },
-    add(){
-        if(this.attrArr.some((item) => item.value=='')){
-            warningAlert('属性与规格均不能为空')
-           return;
-        }
-        this.form.attrs=JSON.stringify(this.attrArr.map((item) => item.value))
-         requestSpecAdd(this.form).then(res=>{
-             if(res.data.code==200){
-                 this.empty();
-                 this.cancel();
-                 this.requestSpecList();
-                this.requestSpecCount()
-             }else{
-                warningAlert(res.data.msg);
-             }
-         })
-    },
-    update(){
-       if(this.attrArr.some((item)=> item.value =='')){
-             warningAlert("属性规格均不能为空");
-             return;
-       }
-       this.form.attrs=JSON.stringify(this.attrArr.map((item)=>item.value));
-       updateSpecDetail(this.form).then(res=>{
-            if(res.data.code==200){
-                successAlert('修改成功')
-                this.empty();
-                this.cancel();
-                this.requestSpecList();
-                this.requestSpecCount()
-            }else{
-                warningAlert(res.data.msg)
+    add(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (this.attrArr.some((item) => item.value == "")) {
+            warningAlert("属性与规格均不能为空");
+            return;
+          }
+          this.form.attrs = JSON.stringify(
+            this.attrArr.map((item) => item.value)
+          );
+          requestSpecAdd(this.form).then((res) => {
+            if (res.data.code == 200) {
+              this.empty();
+              this.cancel();
+              this.requestSpecList();
+              this.requestSpecCount();
+            } else {
+              warningAlert(res.data.msg);
             }
-       })  
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    update(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (this.attrArr.some((item) => item.value == "")) {
+            warningAlert("属性规格均不能为空");
+            return;
+          }
+          this.form.attrs = JSON.stringify(
+            this.attrArr.map((item) => item.value)
+          );
+          updateSpecDetail(this.form).then((res) => {
+            if (res.data.code == 200) {
+              successAlert("修改成功");
+              this.empty();
+              this.cancel();
+              this.requestSpecList();
+              this.requestSpecCount();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
     },
 
-    addAttr(){
-       this.attrArr.push({
-           value:'',
-       }) 
+    addAttr() {
+      this.attrArr.push({
+        value: "",
+      });
     },
-    getDetail(id){
-        requestSpecDetail({id:id}).then(res=>{
-            if(res.data.code==200){
-              successAlert(res.data.msg);
-              this.form=res.data.list[0];
-              this.attrArr=JSON.parse(res.data.list[0].attrs).map((item)=>({
-                   value:item,
-              }))
-              this.form.id=id;
-            }else{
-                warningAlert(res.data.msg)
-            }
-        })
-    }
+    getDetail(id) {
+      requestSpecDetail({ id: id }).then((res) => {
+        if (res.data.code == 200) {
+          successAlert(res.data.msg);
+          this.form = res.data.list[0];
+          this.attrArr = JSON.parse(res.data.list[0].attrs).map((item) => ({
+            value: item,
+          }));
+          this.form.id = id;
+        } else {
+          warningAlert(res.data.msg);
+        }
+      });
+    },
   },
   mounted() {
-      this.requestSpecList();
-      this.requestSpecCount()
+    this.requestSpecList();
+    this.requestSpecCount();
   },
 };
 </script>
 <style scoped lang='stylus'>
- .box >>> .el-form-item__content {
+.box >>> .el-form-item__content {
   display: flex !important;
 }
 

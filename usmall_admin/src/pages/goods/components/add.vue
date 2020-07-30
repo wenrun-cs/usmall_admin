@@ -1,9 +1,9 @@
 <template>
   <div class="box">
     <el-dialog :title="info.title" :visible.sync="info.show" @opened='createEditor'>
-      <el-form :model="form">
+      <el-form :model="form" :rules="rules" ref="form">
           <!-- 一级分类 -->
-        <el-form-item label="一级分类" :label-width="formLabelWidth" >
+        <el-form-item label="一级分类" :label-width="formLabelWidth" prop='first_cateid'>
           <el-select v-model="form.first_cateid" placeholder="请选择" @change="changeFirstCateId()">
             <el-option label="--请选择--" disabled value></el-option>
             <!-- 待添加选项 -->
@@ -17,7 +17,7 @@
           </el-select>
         </el-form-item>
         <!-- 二级分类 -->
-        <el-form-item label="二级分类" :label-width="formLabelWidth">
+        <el-form-item label="二级分类" :label-width="formLabelWidth" prop='second_cateid'>
           <el-select v-model="form.second_cateid" placeholder="请选择">
             <el-option label="--请选择--" disabled :value='0'></el-option>
             <!-- 待添加选项 -->
@@ -25,15 +25,15 @@
           </el-select>
         </el-form-item>
         <!-- 商品名称 -->
-        <el-form-item label="商品名称" :label-width="formLabelWidth">
+        <el-form-item label="商品名称" :label-width="formLabelWidth" prop='goodsname'>
           <el-input v-model="form.goodsname" autocomplete="off"></el-input>
         </el-form-item>
          <!-- 价格 -->
-        <el-form-item label="价格" :label-width="formLabelWidth">
+        <el-form-item label="价格" :label-width="formLabelWidth" prop='price'>
           <el-input v-model="form.price" autocomplete="off"></el-input>
         </el-form-item>
          <!-- 市场价格 -->
-        <el-form-item label="市场价格" :label-width="formLabelWidth">
+        <el-form-item label="市场价格" :label-width="formLabelWidth" prop='market_price'>
           <el-input v-model="form.market_price" autocomplete="off"></el-input>
         </el-form-item>
         <!-- 上传文件图片 -->
@@ -49,7 +49,7 @@
           </el-upload>
         </el-form-item>
         <!-- 商品规格 -->
-        <el-form-item label="商品规格" :label-width="formLabelWidth">
+        <el-form-item label="商品规格" :label-width="formLabelWidth" prop='specsid'>
           <el-select v-model="form.specsid" placeholder="请选择" @change='changeSpecsId()'>
             <el-option label="--请选择--" disabled value></el-option>
             <!-- 待添加选项 -->
@@ -57,7 +57,7 @@
           </el-select>
         </el-form-item>
          <!-- 规格属性 -->
-        <el-form-item label="规格属性" :label-width="formLabelWidth">
+        <el-form-item label="规格属性" :label-width="formLabelWidth" prop='specsattr'>
           <el-select v-model="form.specsattr" placeholder="请选择" multiple>
             <el-option label="--请选择--" disabled value></el-option>
             <!-- 待添加选项 -->
@@ -65,12 +65,12 @@
           </el-select>
         </el-form-item>
         <!-- 是否新品 -->
-        <el-form-item label="是否新品" :label-width="formLabelWidth">
+        <el-form-item label="是否新品" :label-width="formLabelWidth" prop='isnew'>
             <el-radio v-model="form.isnew" :label="1">是</el-radio>
             <el-radio v-model="form.isnew" :label="2">否</el-radio>
         </el-form-item>
         <!-- 是否热卖 -->
-        <el-form-item label="是否热卖" :label-width="formLabelWidth">
+        <el-form-item label="是否热卖" :label-width="formLabelWidth" prop='ishot'>
             <el-radio v-model="form.ishot" :label="1">是</el-radio>
             <el-radio v-model="form.ishot" :label="2">否</el-radio>
         </el-form-item>
@@ -91,8 +91,8 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-            <el-button type="primary" @click="add" v-if="info.isAdd">添加</el-button>
-            <el-button type="primary" @click="update" v-else>修改</el-button>
+            <el-button type="primary" @click="add('form')" v-if="info.isAdd">添加</el-button>
+            <el-button type="primary" @click="update('form')" v-else>修改</el-button>
       </div>
     </el-dialog>
   </div>
@@ -133,6 +133,37 @@ export default {
         status: 1,
       },
       imageUrl: "",
+      rules: {
+          price: [
+            { required: true, message: '请输入价格', trigger: 'blur' },
+            { min: 1, max: 5, message: '长度在 1 到 5 个字符', trigger: 'blur' }
+          ],
+           market_price: [
+            { required: true, message: '请输入官方售价', trigger: 'blur' },
+            { min: 1, max: 5, message: '长度在 1 到 5 个字符', trigger: 'blur' }
+          ],
+          first_cateid: [
+            { required: true, message: '请选择一级分类', trigger: 'change' }
+          ],
+         second_cateid: [
+            { required: true, message: '请选择二级分类', trigger: 'change' }
+          ],
+          goodsname: [
+            { required: true, message: '请选择商品名称', trigger: 'change' }
+          ],
+          specsattr: [
+            { type: 'array', required: true, message: '请至少选择一个规格属性', trigger: 'change' }
+          ],
+          isnew: [
+            { required: true, message: '请选择是否新品', trigger: 'change' }
+          ],
+           ishot: [
+            { required: true, message: '请选择是否热卖', trigger: 'change' }
+          ],
+          specsid: [
+            { required: true, message: '请选择商品规格', trigger: 'change' }
+          ]
+        }
     };
   },
   methods: {
@@ -179,8 +210,10 @@ export default {
         console.log(this.imageUrl) //http://localhost:8080/8c900147-78c6-4b1f-a4b3-92a4d3b79ac7
         this.form.img=file; 
       },
-      add(){
-          this.form.description=this.editor.txt.html();
+      add(formName){
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.form.description=this.editor.txt.html();
           this.form.specsattr=JSON.stringify(this.form.specsattr)
           requestGoodsAdd(this.form).then(res=>{
             if(res.data.code==200){
@@ -193,9 +226,17 @@ export default {
               warningAlert(res.data.msg)
             }
           })
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+          
       },
-      update(){
-          this.form.description=this.editor.txt.html();
+      update(formName){
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.form.description=this.editor.txt.html();
           this.form.specsattr=JSON.stringify(this.form.specsattr)
           updateGoodsDetail(this.form).then(res=>{
             if(res.data.code==200){
@@ -207,7 +248,13 @@ export default {
             }else{
               warningAlert('商品信息修改失败');
             }
-          })    
+          })   
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+           
       },
       empty(){
         this.form= {

@@ -1,8 +1,8 @@
 <template>
   <div class="box">
     <el-dialog :title="info.title" :visible.sync="info.show">
-      <el-form :model="form">
-        <el-form-item label="标题" :label-width="formLabelWidth">
+      <el-form :model="form" :rules="rules" ref="form" >
+        <el-form-item label="标题" :label-width="formLabelWidth" prop='title'>
           <el-input v-model="form.title" autocomplete="off"></el-input>
         </el-form-item>
         <!-- 上传文件 -->
@@ -36,8 +36,8 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-            <el-button type="primary" @click="add" v-if="info.isAdd">添加</el-button>
-            <el-button type="primary" @click="update" v-else>修改</el-button>
+            <el-button type="primary" @click="add('form')" v-if="info.isAdd">添加</el-button>
+            <el-button type="primary" @click="update('form')" v-else>修改</el-button>
       </div>
     </el-dialog>
   </div>
@@ -62,6 +62,12 @@ export default {
         img:null
       },
       imageUrl: "",
+      rules: {
+          title: [
+            { required: true, message: '请输入轮播图标题', trigger: 'blur' },
+            { min: 3, max: 15, message: '长度在 3 到 15 个字符', trigger: 'blur'}
+          ]
+        }
     };
   },
   methods: {
@@ -100,8 +106,11 @@ export default {
         this.imageUrl=URL.createObjectURL(file)
         this.form.img=file;
       },
-      add(){
-          requestBannerAdd(this.form).then(res=>{
+      add(formName){
+      // 正则验证
+          this.$refs[formName].validate((valid) => {
+          if (valid) {
+            requestBannerAdd(this.form).then(res=>{
             if(res.data.code==200){
               successAlert('商品分类添加成功');
               this.cancel();
@@ -111,9 +120,17 @@ export default {
               warningAlert(res.data.msg)
             }
           })
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
       },
-      update(){
-          updateBannerDetail(this.form).then(res=>{
+      update(formName){
+         // 正则验证
+          this.$refs[formName].validate((valid) => {
+          if (valid) {
+             updateBannerDetail(this.form).then(res=>{
             if(res.data.code==200){
                successAlert('轮播图修改成功');
                this.cancel();
@@ -122,7 +139,12 @@ export default {
             }else{
               warningAlert('轮播图修改失败');
             }
-          })    
+          })   
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
       },
       empty(){
         this.form={

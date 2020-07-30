@@ -15,8 +15,8 @@ axios.interceptors.request.use(config=>{
 })
 // 响应拦截
 axios.interceptors.response.use(res =>{
-    // console.group('你现在访问的是'+res.config.url)
-    // console.log(res);
+    console.group('你现在访问的是'+res.config.url)
+    console.log(res);
     if(res.data.msg=='登录已过期或访问权限受限'){
         warningAlert('登录已过期或访问权限受限');
         router.push('/login');

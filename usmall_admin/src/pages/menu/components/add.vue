@@ -1,11 +1,11 @@
 <template>
   <div>
     <el-dialog :title="info.title" :visible.sync="info.show">
-      <el-form :model="form">
-        <el-form-item label="菜单名称" :label-width="formLabelWidth">
+      <el-form :model="form" :rules="rules" ref="form">
+        <el-form-item label="菜单名称" :label-width="formLabelWidth" prop='title'>
           <el-input v-model="form.title" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="上级菜单" :label-width="formLabelWidth">
+        <el-form-item label="上级菜单" :label-width="formLabelWidth" prop='pid'>
           <el-select v-model="form.pid" placeholder="请选择">
             <el-option label="--请选择--" disabled value></el-option>
             <el-option label="顶级菜单" :value="0"></el-option>
@@ -13,16 +13,16 @@
              <el-option v-for="item in list" :key="item.id" :label="item.title" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="菜单类型" :label-width="formLabelWidth">
+        <el-form-item label="菜单类型" :label-width="formLabelWidth" prop='type'>
           <el-radio v-model="form.type" :label="1">目录</el-radio>
           <el-radio v-model="form.type" :label="2">菜单</el-radio>
         </el-form-item>
-        <el-form-item label="菜单图标" :label-width="formLabelWidth" v-if="form.type==1">
+        <el-form-item label="菜单图标" :label-width="formLabelWidth" v-if="form.type==1" prop='icon'>
           <el-select v-model="form.icon" placeholder="请选择">
             <el-option v-for="item in icons" :key="item" :label="item" :value="item"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="菜单地址" :label-width="formLabelWidth" v-else>
+        <el-form-item label="菜单地址" :label-width="formLabelWidth" v-else prop='url'>
           <el-select v-model="form.url" placeholder="请选择">
             <el-option v-for="item in urls" :key="item" :label="item" :value="item"></el-option>
           </el-select>
@@ -39,8 +39,8 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isAdd">添加</el-button>
-        <el-button type="primary" @click="update" v-else>修改</el-button>
+        <el-button type="primary" @click="add('form')" v-if="info.isAdd">添加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修改</el-button>
       </div>
     </el-dialog>
   </div>
@@ -88,7 +88,28 @@ export default {
         url: "",
         status:1
       },
-      formLabelWidth: "80px"
+      formLabelWidth: "80px",
+      rules: {
+          title: [
+            { required: true, message: '请输入菜单名称', trigger: 'blur' },
+            { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+          ],
+          pid: [
+            { required: true, message: '请选择上级菜单', trigger: 'change' }
+          ],
+          icon: [
+            { required: true, message: '请选择菜单图标', trigger: 'change' }
+          ],
+          url: [
+            { required: true, message: '请选择菜单地址', trigger: 'change' }
+          ],
+          type: [
+            { type: 'array', required: true, message: '请至少选择一个活动性质', trigger: 'change' }
+          ],
+          type: [
+            { required: true, message: '请选择菜单或目录', trigger: 'change' }
+          ],
+        }
     };
   },
   methods: {
@@ -114,8 +135,10 @@ export default {
                 }
     },
     // 添加数据
-    add(){
-      requestMenuAdd(this.form).then(res=>{
+    add(formName){
+       this.$refs[formName].validate((valid) => {
+          if (valid) {
+            requestMenuAdd(this.form).then(res=>{
          if(res.data.code=='200'){
           //  弹出框
             successAlert(res.data.msg)
@@ -130,6 +153,12 @@ export default {
            warningAlert(res.data.msg)
         }
       })
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      
     },
     // 获取某一条数据
     getDetail(id){
@@ -139,8 +168,10 @@ export default {
        })
     },
     // 修改数据
-    update(){
-       updateMenuDetail(this.form).then(res=>{
+    update(formName){
+      this.$refs[formName].validate((valid) => {
+          if (valid) {
+             updateMenuDetail(this.form).then(res=>{
            if(res.data.code==200){
              successAlert(res.data.msg)
              this.empty()
@@ -150,6 +181,12 @@ export default {
               warningAlert(res.data.msg)
            }
        })  
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      
     }
   },
   mounted() {}

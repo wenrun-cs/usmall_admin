@@ -1,8 +1,8 @@
 <template>
   <div>
-    <el-dialog :title="info.title" :visible.sync="info.show">
-      <el-form :model="form">
-        <el-form-item label="所属角色" label-width="80px">
+    <el-dialog :title="info.title" :visible.sync="info.show" >
+      <el-form :model="form" :rules="rules" ref="form">
+        <el-form-item label="所属角色" label-width="80px" prop='roleid'>
           <el-select v-model="form.roleid">
             <el-option label="--请选择--" value disabled></el-option>
             <!-- 动态数据 -->
@@ -10,11 +10,11 @@
           </el-select>
         </el-form-item>
         <!-- 用户名 -->
-        <el-form-item label="用户名" label-width="80px">
+        <el-form-item label="用户名" label-width="80px" prop='username'>
           <el-input v-model="form.username" clearable autocomplete="off"></el-input>
         </el-form-item>
         <!-- 密码 -->
-        <el-form-item label="密码" label-width="80px">
+        <el-form-item label="密码" label-width="80px" prop='password'>
           <el-input placeholder="请输入密码" clearable v-model="form.password" show-password></el-input>
         </el-form-item>
         <!-- 状态 -->
@@ -25,8 +25,8 @@
       <!-- 确认取消 -->
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取消</el-button>
-        <el-button type="primary" @click="add"    v-if="info.isAdd">添加</el-button>
-        <el-button type="primary" @click="update" v-else>修改</el-button>
+        <el-button type="primary" @click="add('form')"    v-if="info.isAdd">添加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修改</el-button>
       </div>
     </el-dialog>
   </div>
@@ -51,6 +51,19 @@ export default {
         password:'',
         status:1
       },
+       rules: {
+          username: [
+            { required: true, message: '请输入用户名', trigger: 'blur' },
+            { min: 1, max: 15, message: '长度在 1 到 15 个字符', trigger: 'blur' }
+          ],
+           password: [
+            { required: true, message: '请输入密码', trigger: 'blur' },
+            { min: 6, max: 18, message: '长度在 6 到 18 个字符', trigger: 'blur' }
+          ],
+          roleid: [
+            { required: true, message: '请选择所属角色', trigger: 'change' }
+          ],
+        }
     };
   },
   methods: {
@@ -59,8 +72,10 @@ export default {
          requestManagelist:'manage/requestManagelist'
     }),
     // 添加
-    add(){
-        requestManageAdd(this.form).then(res=>{
+    add(formName){
+         this.$refs[formName].validate((valid) => {
+          if (valid) {
+            requestManageAdd(this.form).then(res=>{
           if(res.data.code==200){
             successAlert(res.data.msg);
             this.cancel();
@@ -71,10 +86,19 @@ export default {
                 warningAlert(res.data.msg)
           }
         })
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+
+        
     },
     // 修改
-    update(){
-        updateManageDetail(this.form).then(res=>{
+    update(formName){
+         this.$refs[formName].validate((valid) => {
+          if (valid) {
+            updateManageDetail(this.form).then(res=>{
             if(res.data.code=200){
                 successAlert('信息修改成功了');
                 this.cancel();
@@ -84,6 +108,13 @@ export default {
                 warningAlert(res.data.msg)
             }
         })
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+
+        
     },
     // 置空
     empty(){

@@ -1,13 +1,13 @@
 <template>
   <div>
-    <el-dialog title="收货地址" :visible.sync="info.show">
-      <el-form :model="form">
+    <el-dialog title="收货地址" :visible.sync="info.show" >
+      <el-form :model="form" :rules="rules" ref="form">
         <!-- 活动名称 -->
-        <el-form-item label="活动名称" :label-width="formLabelWidth">
+        <el-form-item label="活动名称" :label-width="formLabelWidth" prop='title'>
           <el-input v-model="form.title" autocomplete="off"></el-input>
         </el-form-item>
         <!-- 活动期限 -->
-        <el-form-item label="活动期限" :label-width="formLabelWidth">
+        <el-form-item label="活动期限" :label-width="formLabelWidth" >
           <el-date-picker
             v-model="value1"
             type="daterange"
@@ -18,7 +18,7 @@
           ></el-date-picker>
         </el-form-item>
         <!--一级分类-->
-        <el-form-item label="一级分类" :label-width="formLabelWidth">
+        <el-form-item label="一级分类" :label-width="formLabelWidth" prop='first_cateid'>
           <el-select v-model="form.first_cateid" placeholder="请选择分类" @change="changeFirst()">
             <el-option label="-----------请选择-----------" value disabled></el-option>
             <el-option v-for="item in catelist" :key="item.id"  :label="item.catename" :value="item.id"></el-option>
@@ -26,7 +26,7 @@
         </el-form-item>
 
         <!--二级分类-->
-        <el-form-item label="二级分类" :label-width="formLabelWidth">
+        <el-form-item label="二级分类" :label-width="formLabelWidth" prop='second_cateid'>
           <el-select v-model="form.second_cateid" placeholder="请选择分类" @change="changeSecond()">
             <el-option label="-----------请选择-----------" value disabled></el-option>
             <el-option v-for='item in secondArr' :key="item.id"   :label="item.catename" :value="item.id"></el-option>
@@ -34,7 +34,7 @@
         </el-form-item>
 
         <!--商品-->
-        <el-form-item label="商品" :label-width="formLabelWidth">
+        <el-form-item label="商品" :label-width="formLabelWidth" prop='goodsid'>
           <el-select v-model="form.goodsid" placeholder="请选择商品">
             <el-option label="-----------请选择-----------" value disabled></el-option>
             <el-option v-for="item in goodslist" :key="item.id" :label="item.goodsname" :value="item.id"></el-option>
@@ -53,8 +53,8 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isAdd">添加</el-button>
-        <el-button type="primary" @click="update" v-else>修改</el-button>
+        <el-button type="primary" @click="add('form')" v-if="info.isAdd">添加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修改</el-button>
       </div>
     </el-dialog>
   </div>
@@ -89,6 +89,24 @@ export default {
         endtime:''
       },
       formLabelWidth: "100px",
+      rules: {
+          title: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' },
+            { min: 1, max: 15, message: '长度在 1 到 15 个字符', trigger: 'blur' }
+          ],
+          first_cateid: [
+            { required: true, message: '请选择一级分类', trigger: 'change' }
+          ],
+           second_cateid: [
+            { required: true, message: '请选择二级分类', trigger: 'change' }
+          ],
+           goodsid: [
+            { required: true, message: '请选择商品', trigger: 'change' }
+          ],
+          value1: [
+            { required: true, message: '请选择活动时间', trigger: 'blur' },
+          ],
+        }
     };
   },
   methods: {
@@ -117,8 +135,11 @@ export default {
         endtime:''
       }
     },
-    add(){
-       requestSeckillAdd(this.form).then(res=>{
+    add(formName){
+
+      this.$refs[formName].validate((valid) => {
+          if (valid) {
+            requestSeckillAdd(this.form).then(res=>{
            if(res.data.code==200){
                successAlert(res.data.msg);
                this.cancel();
@@ -126,6 +147,13 @@ export default {
                this.requestchangeSeckillList();
            }
        }) 
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+
+       
     },
     // 一级分类改变
     changeFirst(bool){
@@ -167,8 +195,10 @@ export default {
       })
     },
     // 修改秒杀界面
-    update(){
-        updateSeckillDetail(this.form).then(res=>{
+    update(formName){
+      this.$refs[formName].validate((valid) => {
+          if (valid) {
+            updateSeckillDetail(this.form).then(res=>{
            if(res.data.code===200){
               successAlert(res.data.msg)
               this.cancel();
@@ -177,7 +207,13 @@ export default {
            }else{
                warningAlert(res.data.msg)
            }
-        })     
+        })  
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+           
     } 
     },
     mounted(){
